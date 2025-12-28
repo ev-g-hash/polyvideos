@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ video.title|default:"Видео" }}{% endblock %}
+
+{% block content %}
+<section class="page">
+  <div class="card stack-lg">
+    <h2>{{ video.title|default:"Видео" }}</h2>
+    <div class="video-detail">
+      <div class="video-player-container">
+        <video id="videoPlayer" controls preload="metadata" class="detail-video">
+          <source src="{{ video.video.url }}" type="video/mp4">
+          Ваш браузер не поддерживает воспроизведение видео.
+        </video>
+      </div>
+      {% if video.description %}
+      <p class="detail-desc">{{ video.description }}</p>
+      {% endif %}
+      {% if video.duration %}
+      <p class="detail-duration">Длительность: {{ video.duration }}</p>
+      {% endif %}
+    </div>
+    <div class="btn-row">
+      <a class="btn" href="{% url 'gallery' %}">Назад к галерее</a>
+      <a class="btn content-album-btn" href="{% url 'conclusion' %}">Содержание</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

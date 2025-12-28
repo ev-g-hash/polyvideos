@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django
+local_settings.py
+db.sqlite3  # Исключаем только основную БД, но оставляем возможность миграций
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Static and Media (для экономии места в репозитории)
+static/
+media/
+
+# Logs
+*.log
+django.log
+
+#настройки перед деплоем
+foto-albom.txt
+push.txt
+venv_fotos
+imagessss
+

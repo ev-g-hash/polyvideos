@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Содержание{% endblock %}
+
+{% block content %}
+<section class="page">
+  <div class="card stack-lg">
+    <h2>Содержание</h2>
+    
+    {% if can_upload %}
+    <div class="admin-controls">
+      <a class="btn" href="{% url 'upload_videos' %}">
+        📤 Загрузить видео
+      </a>
+    </div>
+    {% endif %}
+    
+    <p class="lead">Список всех загруженных видео. Нажмите на название, чтобы перейти к видео.</p>
+
+    <div class="conclusion-scrollable">
+      <ul class="conclusion-list">
+        {% for video in videos %}
+        <li>
+          <div class="video-list-item">
+            {% if can_upload %}
+              <button class="video-title-btn editable" 
+                      onclick="showVideoModal({{ video.pk }}, '{{ video.title|default:"Видео без названия"|escapejs }}', '{{ video.description|default:""|escapejs }}')">
+                {{ video.title|default:"Видео без названия" }}
+                <span class="edit-hint"> - редактировать</span>
+              </button>
+            {% else %}
+              <a href="{% url 'video_detail' video.pk %}" class="video-title-link">
+                {{ video.title|default:"Видео без названия" }}
+              </a>
+            {% endif %}
+          </div>
+        </li>
+        {% empty %}
+        <li>
+          <p class="muted">Пока ничего нет.</p>
+          {% if can_upload %}
+          <a href="{% url 'upload_videos' %}">Загрузить первое видео</a>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn" href="{% url 'gallery' %}">Начало галереи</a>
+      <a class="btn secondary" href="/">На главную</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

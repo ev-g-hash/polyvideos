@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Авторизация{% endblock %}
+
+{% block content %}
+<section class="page">
+  <div class="card stack-lg">
+    <h2>Авторизация</h2>
+    <p class="lead">Войдите в систему для управления видео</p>
+
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div class="message {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" class="login-form">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label for="username">Имя пользователя:</label>
+        <input type="text" name="username" id="username" required class="form-input" placeholder="Введите имя пользователя">
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Пароль:</label>
+        <input type="password" name="password" id="password" required class="form-input" placeholder="Введите пароль">
+      </div>
+      
+      <button type="submit" class="btn login-btn">
+        <span class="btn-text">Войти</span>
+        <span class="btn-icon">🔐</span>
+      </button>
+    </form>
+
+    <div class="login-notice">
+      <div class="notice-item">
+        <span class="notice-icon">👤</span>
+        <span class="notice-text">Только администраторы могут загружать и удалять видео</span>
+      </div>
+      <div class="notice-item">
+        <span class="notice-icon">🔒</span>
+        <span class="notice-text">После входа станет доступна кнопка "Загрузить видео"</span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="/">На главную</a>
+      <a class="btn" href="{% url 'gallery' %}">К галерее</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
