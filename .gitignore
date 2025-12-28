@@ -44,7 +44,7 @@ venv.bak/
 Thumbs.db
 
 # Static and Media (для экономии места в репозитории)
-static/
+# static/
 media/
 
 # Logs
