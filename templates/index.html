@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Poly Videos{% endblock %}
+
+{% block content %}
+<header class="header-main">
+    <div class="profile-container">
+        <div class="avatar-container">
+            <div class="avatar-glow"></div>
+            <img alt="Poly Videos" class="avatar" src="{% static 'images/аватар.png' %}"/>
+        </div>
+        <div class="profile-info">
+            <h1>Poly Videos</h1>
+            <p class="description">Видосики от Poly. Здесь вы можете посмотреть интересные и прикольные видосики от Poly.</p>
+            <div class="profile-actions">
+                <a class="btn-primary" href="{% url 'gallery' %}">
+                    <svg fill="currentColor" height="20" viewbox="0 0 24 24" width="20"><path d="M8 5v14l11-7z"/></svg>
+                    Смотреть Видосики
+                </a>
+                <a class="btn-primary" href="{% url 'admin' %}">
+                    <svg fill="currentColor" height="20" viewbox="0 0 24 24" width="20"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+                    Админ Панель
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+{% endblock %}

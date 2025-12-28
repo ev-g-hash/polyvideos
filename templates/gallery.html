@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Галерея Видео | Poly Videos{% endblock %}
+
+{% block content %}
+<div class="header-gallery">
+    <a href="{% url 'index' %}" class="back-btn">
+        ← Назад
+    </a>
+    <h1 class="page-title">Галерея Видео</h1>
+    <p class="page-description">Коллекция интересных и прикольных видосиков от Poly. Выберите категорию и наслаждайтесь просмотром!</p>
+    
+    <div class="filter-tabs">
+        <div class="filter-tab active">Все</div>
+        <div class="filter-tab">Лучшие</div>
+        <div class="filter-tab">Мультяшные</div>
+        <div class="filter-tab">Реальные</div>
+        <div class="filter-tab">Разные</div>
+    </div>
+</div>
+
+<div class="gallery-container">
+    <div class="video-grid">
+        <!-- Video 1 -->
+        <div class="video-card" data-category="Обучение">
+            <div class="video-thumbnail">
+                <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=225&fit=crop" alt="Python для начинающих">
+                <div class="play-button"></div>
+                <div class="video-duration">15:42</div>
+            </div>
+            <div class="video-info">
+                <h3>Видосик от Poly № 1</h3>
+                <div class="video-meta">
+                    <div class="video-stats">
+                        <div class="stat-item">👁️ 12.5K</div>
+                        <div class="stat-item">👍 98%</div>
+                    </div>
+                    <div class="category-badge">Обучение</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video 2 -->
+        <div class="video-card" data-category="Геймдев">
+            <div class="video-thumbnail">
+                <img src="https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=400&h=225&fit=crop" alt="Создание игр на Python">
+                <div class="play-button"></div>
+                <div class="video-duration">23:18</div>
+            </div>
+            <div class="video-info">
+                <h3>Видосик от Poly № 2</h3>
+                <div class="video-meta">
+                    <div class="video-stats">
+                        <div class="stat-item">👁️ 8.2K</div>
+                        <div class="stat-item">👍 95%</div>
+                    </div>
+                    <div class="category-badge">Геймдев</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video 3 -->
+        <div class="video-card" data-category="Технологии">
+            <div class="video-thumbnail">
+                <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=225&fit=crop" alt="Веб-разработка">
+                <div class="play-button"></div>
+                <div class="video-duration">31:05</div>
+            </div>
+            <div class="video-info">
+                <h3>Видосик от Poly № 3</h3>
+                <div class="video-meta">
+                    <div class="video-stats">
+                        <div class="stat-item">👁️ 15.7K</div>
+                        <div class="stat-item">👍 97%</div>
+                    </div>
+                    <div class="category-badge">Технологии</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video 4 -->
+        <div class="video-card" data-category="Обучение">
+            <div class="video-thumbnail">
+                <img src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=400&h=225&fit=crop" alt="Алгоритмы">
+                <div class="play-button"></div>
+                <div class="video-duration">18:33</div>
+            </div>
+            <div class="video-info">
+                <h3>Видосик от Poly № 4</h3>
+                <div class="video-meta">
+                    <div class="video-stats">
+                        <div class="stat-item">👁️ 6.9K</div>
+                        <div class="stat-item">👍 92%</div>
+                    </div>
+                    <div class="category-badge">Обучение</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video 5 -->
+        <div class="video-card" data-category="Технологии">
+            <div class="video-thumbnail">
+                <img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=225&fit=crop" alt="Машинное обучение">
+                <div class="play-button"></div>
+                <div class="video-duration">27:45</div>
+            </div>
+            <div class="video-info">
+                <h3>Видосик от Poly № 5</h3>
+                <div class="video-meta">
+                    <div class="video-stats">
+                        <div class="stat-item">👁️ 11.3K</div>
+                        <div class="stat-item">👍 94%</div>
+                    </div>
+                    <div class="category-badge">Технологии</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video 6 -->
+        <div class="video-card" data-category="Развлечения">
+            <div class="video-thumbnail">
+                <img src="https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400&h=225&fit=crop" alt="Программистский юмор">
+                <div class="play-button"></div>
+                <div class="video-duration">12:22</div>
+            </div>
+            <div class="video-info">
+                <h3>Видосик от Poly № 6</h3>
+                <div class="video-meta">
+                    <div class="video-stats">
+                        <div class="stat-item">👁️ 19.8K</div>
+                        <div class="stat-item">👍 99%</div>
+                    </div>
+                    <div class="category-badge">Развлечения</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
