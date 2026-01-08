@@ -35,7 +35,6 @@ def video_detail(request, pk: int):
     """Детальная страница видео"""
     video = get_object_or_404(Video, pk=pk)
     
-    # Если нет превью, пробуем создать
     if not video.thumbnail:
         video.generate_thumbnail_on_demand()
     
@@ -60,8 +59,12 @@ def is_superuser(user):
 @user_passes_test(is_superuser)
 def upload_video(request):
     """Страница загрузки видео (только для суперюзера)"""
-    # Получаем видео без превью - используем isnull для правильной фильтрации
+    # Получаем видео без превью
     videos_without_thumbnails = Video.objects.filter(thumbnail__isnull=True).order_by('-created_at')[:10]
+    
+    # Проверяем, нужно ли показать модальное окно успеха
+    show_success_modal = request.GET.get('upload_success') == '1'
+    uploaded_video_title = request.GET.get('video_title', '')
     
     if request.method == 'POST':
         try:
@@ -92,7 +95,7 @@ def upload_video(request):
                     'videos_without_thumbnails': videos_without_thumbnails
                 })
             
-            # Создаём видео (конвертация и превью создадутся автоматически в модели)
+            # Создаём видео
             video = Video.objects.create(
                 title=title or video_file.name,
                 description=description,
@@ -101,7 +104,9 @@ def upload_video(request):
             )
             
             messages.success(request, f'Видео "{video.title}" успешно загружено!')
-            return redirect('upload_videos')
+            
+            # Перенаправляем с параметром для показа модального окна
+            return redirect(f'/videos/upload/?upload_success=1&video_title={video.title}')
             
         except Exception as e:
             messages.error(request, f'Ошибка при загрузке: {str(e)}')
@@ -110,7 +115,9 @@ def upload_video(request):
             })
     
     return render(request, 'upload.html', {
-        'videos_without_thumbnails': videos_without_thumbnails
+        'videos_without_thumbnails': videos_without_thumbnails,
+        'show_success_modal': show_success_modal,
+        'uploaded_video_title': uploaded_video_title
     })
 
 
@@ -123,7 +130,6 @@ def delete_video(request, pk):
         video = get_object_or_404(Video, pk=pk)
         video_title = video.title or f"Видео #{video.pk}"
         
-        # Удаляем файлы
         if video.video:
             video_path = video.video.path
             if os.path.exists(video_path):
@@ -201,7 +207,6 @@ def generate_thumbnail(request, pk):
         video = get_object_or_404(Video, pk=pk)
         video.generate_thumbnail_on_demand()
         
-        # Проверяем создалось ли превью
         thumbnail_created = False
         if video.thumbnail:
             try:
@@ -218,7 +223,7 @@ def generate_thumbnail(request, pk):
         else:
             return JsonResponse({
                 'success': False,
-                'error': 'Не удалось создать превью. Проверьте, что FFmpeg установлен и видео не повреждено.'
+                'error': 'Не удалось создать превью. Проверьте, что FFmpeg установлен.'
             })
             
     except Exception as e:
