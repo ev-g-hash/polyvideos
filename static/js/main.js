@@ -107,6 +107,7 @@ function showVideoModal(videoId, videoTitle, videoDescription) {
     const editTitleBtn = modal.querySelector('.edit-title');
     const editDescBtn = modal.querySelector('.edit-description');
     const deleteBtn = modal.querySelector('.delete-video');
+    const thumbBtn = modal.querySelector('.generate-thumb');
     
     if (titleEl) {
         titleEl.textContent = videoTitle;
@@ -115,6 +116,7 @@ function showVideoModal(videoId, videoTitle, videoDescription) {
     if (editTitleBtn) editTitleBtn.style.display = 'inline-flex';
     if (editDescBtn) editDescBtn.style.display = 'inline-flex';
     if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+    if (thumbBtn) thumbBtn.style.display = 'inline-flex';
     
     if (galleryBtn) {
         galleryBtn.addEventListener('click', () => {
@@ -138,6 +140,12 @@ function showVideoModal(videoId, videoTitle, videoDescription) {
     if (editDescBtn) {
         editDescBtn.addEventListener('click', () => {
             showEditDescriptionForm(videoId, videoDescription);
+        });
+    }
+    
+    if (thumbBtn) {
+        thumbBtn.addEventListener('click', () => {
+            generateThumbnail(videoId);
         });
     }
     
@@ -179,6 +187,9 @@ function createActionsModal() {
                         </button>
                         <button type="button" class="modal-btn edit edit-description" style="display: none;">
                             📝 Редактировать описание
+                        </button>
+                        <button type="button" class="modal-btn primary generate-thumb" style="display: none;">
+                            🖼️ Создать превью
                         </button>
                         <button type="button" class="modal-btn delete delete-video" style="display: none;">
                             🗑️ Удалить видео
@@ -223,6 +234,39 @@ function closeActionsModal() {
         document.body.style.overflow = '';
         hideEditForms();
     }
+}
+
+// =============================================================================
+// ГЕНЕРАЦИЯ ПРЕВЬЮ
+// =============================================================================
+
+function generateThumbnail(videoId) {
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch(`/videos/thumbnail/${videoId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('Превью успешно создано! Обновляем страницу...', 'success');
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showMessage(data.error || 'Ошибка при создании превью', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Ошибка при создании превью', 'error');
+    });
 }
 
 // =============================================================================

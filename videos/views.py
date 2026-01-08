@@ -1,12 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login, logout
-from django.core.files.storage import default_storage
 import json
 import os
 from .models import Video
@@ -35,17 +34,18 @@ def gallery(request):
 def video_detail(request, pk: int):
     """Детальная страница видео"""
     video = get_object_or_404(Video, pk=pk)
+    
+    # Если нет превью, пробуем создать
+    if not video.thumbnail:
+        video.generate_thumbnail_on_demand()
+    
     return render(request, 'detail.html', {'video': video})
 
 
 def conclusion(request):
-    """
-    Страница содержания.
-    Кнопка загрузки видна ТОЛЬКО для суперюзера.
-    """
+    """Страница содержания"""
     videos = Video.objects.all()
     can_upload = request.user.is_authenticated and request.user.is_superuser
-    
     return render(request, 'conclusion.html', {
         'videos': videos,
         'can_upload': can_upload
@@ -60,6 +60,9 @@ def is_superuser(user):
 @user_passes_test(is_superuser)
 def upload_video(request):
     """Страница загрузки видео (только для суперюзера)"""
+    # Получаем видео без превью - используем isnull для правильной фильтрации
+    videos_without_thumbnails = Video.objects.filter(thumbnail__isnull=True).order_by('-created_at')[:10]
+    
     if request.method == 'POST':
         try:
             video_file = request.FILES.get('video')
@@ -69,21 +72,27 @@ def upload_video(request):
             
             if not video_file:
                 messages.error(request, 'Пожалуйста, выберите видео файл')
-                return render(request, 'upload.html')
+                return render(request, 'upload.html', {
+                    'videos_without_thumbnails': videos_without_thumbnails
+                })
             
             # Валидация размера
             if video_file.size > 500 * 1024 * 1024:
                 messages.error(request, 'Размер файла не должен превышать 500MB')
-                return render(request, 'upload.html')
+                return render(request, 'upload.html', {
+                    'videos_without_thumbnails': videos_without_thumbnails
+                })
             
             # Валидация расширения
             ext = video_file.name.split('.')[-1].lower()
             allowed_exts = ['mp4', 'webm', 'mov', 'avi', 'mkv', 'm4v', '3gp']
             if ext not in allowed_exts:
                 messages.error(request, f'Недопустимый формат. Разрешены: {", ".join(allowed_exts)}')
-                return render(request, 'upload.html')
+                return render(request, 'upload.html', {
+                    'videos_without_thumbnails': videos_without_thumbnails
+                })
             
-            # Создаём видео (конвертация произойдёт автоматически в модели)
+            # Создаём видео (конвертация и превью создадутся автоматически в модели)
             video = Video.objects.create(
                 title=title or video_file.name,
                 description=description,
@@ -92,13 +101,17 @@ def upload_video(request):
             )
             
             messages.success(request, f'Видео "{video.title}" успешно загружено!')
-            return redirect('conclusion')
+            return redirect('upload_videos')
             
         except Exception as e:
             messages.error(request, f'Ошибка при загрузке: {str(e)}')
-            return render(request, 'upload.html')
+            return render(request, 'upload.html', {
+                'videos_without_thumbnails': videos_without_thumbnails
+            })
     
-    return render(request, 'upload.html')
+    return render(request, 'upload.html', {
+        'videos_without_thumbnails': videos_without_thumbnails
+    })
 
 
 @csrf_exempt
@@ -110,7 +123,7 @@ def delete_video(request, pk):
         video = get_object_or_404(Video, pk=pk)
         video_title = video.title or f"Видео #{video.pk}"
         
-        # Удаляем файл
+        # Удаляем файлы
         if video.video:
             video_path = video.video.path
             if os.path.exists(video_path):
@@ -176,6 +189,42 @@ def edit_video(request, pk):
         return JsonResponse({
             'success': False,
             'error': f'Ошибка при редактировании: {str(e)}'
+        })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@user_passes_test(is_superuser)
+def generate_thumbnail(request, pk):
+    """Создание превью для видео по запросу"""
+    try:
+        video = get_object_or_404(Video, pk=pk)
+        video.generate_thumbnail_on_demand()
+        
+        # Проверяем создалось ли превью
+        thumbnail_created = False
+        if video.thumbnail:
+            try:
+                thumbnail_created = os.path.exists(video.thumbnail.path)
+            except:
+                pass
+        
+        if thumbnail_created:
+            return JsonResponse({
+                'success': True,
+                'message': 'Превью успешно создано!',
+                'thumbnail_url': video.thumbnail.url
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Не удалось создать превью. Проверьте, что FFmpeg установлен и видео не повреждено.'
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Ошибка: {str(e)}'
         })
 
 
