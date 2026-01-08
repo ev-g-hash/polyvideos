@@ -18,12 +18,25 @@
                     <svg fill="currentColor" height="20" viewbox="0 0 24 24" width="20"><path d="M8 5v14l11-7z"/></svg>
                     Смотреть Видосики
                 </a>
-                <a class="btn-primary" href="{% url 'login' %}">
-                    <svg fill="currentColor" height="20" viewbox="0 0 24 24" width="20"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
-                    Админ Панель
+                <a class="btn-primary content-btn" href="{% url 'conclusion' %}">
+                    <svg fill="currentColor" height="20" viewbox="0 0 24 24" width="20"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+                    Содержание
                 </a>
             </div>
         </div>
     </div>
 </header>
+
+<style>
+/* Стили для кнопки Содержание */
+.content-btn {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+}
+
+.content-btn:hover {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4) !important;
+}
+</style>
 {% endblock %}
