@@ -8,7 +8,8 @@
   <div class="card stack-lg">
     <h2>Содержание</h2>
     
-    {% if can_upload %}
+    {# Кнопка загрузки - только для суперюзера #}
+    {% if user.is_authenticated and user.is_superuser %}
     <div class="admin-controls">
       <a class="btn" href="{% url 'upload_videos' %}">
         📤 Загрузить видео
@@ -23,7 +24,8 @@
         {% for video in videos %}
         <li>
           <div class="video-list-item">
-            {% if can_upload %}
+            {# Проверяем права доступа #}
+            {% if user.is_authenticated and user.is_superuser %}
               <button class="video-title-btn editable" 
                       onclick="showVideoModal({{ video.pk }}, '{{ video.title|default:"Видео без названия"|escapejs }}', '{{ video.description|default:""|escapejs }}')">
                 {{ video.title|default:"Видео без названия" }}
@@ -39,7 +41,8 @@
         {% empty %}
         <li>
           <p class="muted">Пока ничего нет.</p>
-          {% if can_upload %}
+          {# Ссылка для загрузки - только для суперюзера #}
+          {% if user.is_authenticated and user.is_superuser %}
           <a href="{% url 'upload_videos' %}">Загрузить первое видео</a>
           {% endif %}
         </li>

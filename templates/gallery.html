@@ -67,18 +67,16 @@
     <div class="video-modal-body">
       <video id="videoPlayer" controls preload="metadata">
         <source src="" type="video/mp4">
-        Ваш браузер не поддерживает воспроизведение видео.
+        Ваш браузер не поддерживает воспроизведение этого видео.
+        <track kind="captions" src="" srclang="ru" label="Русский">
       </video>
     </div>
-    {% if video.description %}
     <div class="video-modal-footer">
       <p id="videoModalDesc"></p>
     </div>
-    {% endif %}
   </div>
 </div>
 
-<!-- Скрытый элемент с данными для JavaScript -->
 <script type="application/json" id="gallery-data">
 {
   "totalVideos": {{ videos_list.count|default:page_obj.paginator.count }},

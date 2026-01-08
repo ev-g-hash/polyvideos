@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -13,14 +13,14 @@ from .models import Video
 
 
 def index(request):
-    """Главная страница - перенаправляем на галерею или показываем приветствие"""
+    """Главная страница"""
     return render(request, 'index.html')
 
 
 def gallery(request):
     """Страница галереи видео"""
     videos_list = Video.objects.all()
-    per_page = 6  # Всегда 6 видео на странице
+    per_page = 6
     
     paginator = Paginator(videos_list, per_page)
     page_number = request.GET.get('page')
@@ -39,9 +39,13 @@ def video_detail(request, pk: int):
 
 
 def conclusion(request):
-    """Страница содержания с кнопкой загрузки (только для суперюзера)"""
+    """
+    Страница содержания.
+    Кнопка загрузки видна ТОЛЬКО для суперюзера.
+    """
     videos = Video.objects.all()
     can_upload = request.user.is_authenticated and request.user.is_superuser
+    
     return render(request, 'conclusion.html', {
         'videos': videos,
         'can_upload': can_upload
@@ -67,18 +71,19 @@ def upload_video(request):
                 messages.error(request, 'Пожалуйста, выберите видео файл')
                 return render(request, 'upload.html')
             
-            # Валидация
+            # Валидация размера
             if video_file.size > 500 * 1024 * 1024:
                 messages.error(request, 'Размер файла не должен превышать 500MB')
                 return render(request, 'upload.html')
             
+            # Валидация расширения
             ext = video_file.name.split('.')[-1].lower()
-            allowed_exts = ['mp4', 'webm', 'mov', 'avi', 'mkv']
+            allowed_exts = ['mp4', 'webm', 'mov', 'avi', 'mkv', 'm4v', '3gp']
             if ext not in allowed_exts:
                 messages.error(request, f'Недопустимый формат. Разрешены: {", ".join(allowed_exts)}')
                 return render(request, 'upload.html')
             
-            # Создаём видео
+            # Создаём видео (конвертация произойдёт автоматически в модели)
             video = Video.objects.create(
                 title=title or video_file.name,
                 description=description,
@@ -107,11 +112,13 @@ def delete_video(request, pk):
         
         # Удаляем файл
         if video.video:
-            if os.path.isfile(video.video.path):
-                os.remove(video.video.path)
+            video_path = video.video.path
+            if os.path.exists(video_path):
+                os.remove(video_path)
         if video.thumbnail:
-            if os.path.isfile(video.thumbnail.path):
-                os.remove(video.thumbnail.path)
+            thumb_path = video.thumbnail.path
+            if os.path.exists(thumb_path):
+                os.remove(thumb_path)
         
         video.delete()
         
