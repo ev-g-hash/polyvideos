@@ -481,17 +481,19 @@ h2 {
     aspect-ratio: 16/9;
     background: rgba(255,255,255,0.03);
     border: 1px solid var(--border);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .video-thumbnail img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform .2s ease;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Эффект увеличения при наведении */
 .video-thumbnail:hover img {
-    transform: scale(1.05);
+    transform: scale(1.15);
 }
 
 .video-placeholder {
@@ -510,9 +512,9 @@ h2 {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.4);
     opacity: 0;
-    transition: opacity .2s ease;
+    transition: opacity 0.3s ease;
     color: white;
 }
 
@@ -520,16 +522,71 @@ h2 {
     opacity: 1;
 }
 
-.video-duration {
+.play-overlay svg {
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.video-thumbnail:hover .play-overlay svg {
+    transform: scale(1);
+}
+
+/* Бейдж длительности */
+.video-duration-badge {
     position: absolute;
     bottom: 8px;
     right: 8px;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.75);
     color: white;
-    padding: 2px 6px;
+    padding: 3px 8px;
     border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Подсказка при наведении */
+.hover-play-hint {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(16, 185, 129, 0.9);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.video-thumbnail:hover .hover-play-hint {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.hover-play-hint svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* Эффект тени и границы при наведении */
+.video-thumbnail:hover {
+    box-shadow: 
+        0 12px 40px rgba(16, 185, 129, 0.25),
+        0 0 0 2px rgba(16, 185, 129, 0.3);
+    border-color: rgba(16, 185, 129, 0.5);
 }
 
 .video-title {
@@ -556,7 +613,7 @@ h2 {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.92);
     z-index: 2000;
     align-items: center;
     justify-content: center;
@@ -566,6 +623,16 @@ h2 {
 
 .video-modal.open {
     display: flex;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .video-modal-overlay {
@@ -579,22 +646,22 @@ h2 {
     background: var(--bg-card);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: var(--radius);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
     max-width: 1000px;
     width: 100%;
     overflow: hidden;
     backdrop-filter: blur(15px);
-    animation: modalSlideIn 0.3s ease-out;
+    animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes modalSlideIn {
     from {
         opacity: 0;
-        transform: translateY(-30px) scale(0.9);
+        transform: scale(0.9) translateY(20px);
     }
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: scale(1) translateY(0);
     }
 }
 
@@ -604,6 +671,7 @@ h2 {
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.2);
 }
 
 .video-modal-header h3 {
@@ -623,19 +691,21 @@ h2 {
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 8px;
+    padding: 10px;
     border-radius: 8px;
-    transition: all .2s ease;
+    transition: all 0.2s ease;
     flex-shrink: 0;
 }
 
 .close-modal-btn:hover {
     background: rgba(255,255,255,0.1);
     color: var(--text-main);
+    transform: rotate(90deg);
 }
 
 .video-modal-body {
     padding: 0;
+    background: #000;
 }
 
 .video-modal-body video {
@@ -647,12 +717,73 @@ h2 {
 .video-modal-footer {
     padding: 16px 20px;
     border-top: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.2);
 }
 
 .video-modal-footer p {
     margin: 0;
     color: var(--text-muted);
     font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* ========================================
+   МОБИЛЬНАЯ АДАПТИВНОСТЬ ГАЛЕРЕИ
+   ======================================== */
+
+@media (max-width: 768px) {
+    .video-thumbnail:hover img {
+        transform: scale(1.05);
+    }
+    
+    .video-thumbnail:hover .play-overlay svg {
+        transform: scale(0.9);
+    }
+    
+    .hover-play-hint {
+        font-size: 0.75rem;
+        padding: 5px 10px;
+    }
+    
+    .play-overlay svg {
+        height: 48px;
+        width: 48px;
+    }
+    
+    .video-duration-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .video-thumbnail {
+        border-radius: 6px;
+    }
+    
+    .play-overlay svg {
+        height: 40px;
+        width: 40px;
+    }
+    
+    .hover-play-hint {
+        bottom: 6px;
+        left: 6px;
+        font-size: 0.7rem;
+        padding: 4px 8px;
+    }
+    
+    .hover-play-hint svg {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .video-duration-badge {
+        bottom: 6px;
+        right: 6px;
+        font-size: 0.65rem;
+        padding: 2px 5px;
+    }
 }
 
 /* ========================================

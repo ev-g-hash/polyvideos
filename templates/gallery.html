@@ -20,11 +20,13 @@
           </div>
           {% endif %}
           <div class="play-overlay">
-            <svg fill="currentColor" height="48" viewbox="0 0 24 24" width="48"><path d="M8 5v14l11-7z"/></svg>
+            <svg fill="currentColor" height="64" viewbox="0 0 24 24" width="64"><path d="M8 5v14l11-7z"/></svg>
           </div>
-          {% if video.duration %}
-          <span class="video-duration">{{ video.duration }}</span>
-          {% endif %}
+          <div class="video-duration-badge">{{ video.duration }}</div>
+          <div class="hover-play-hint">
+            <svg fill="currentColor" height="20" viewbox="0 0 24 24" width="20"><path d="M8 5v14l11-7z"/></svg>
+            <span>Смотреть</span>
+          </div>
         </div>
         {% if video.title %}
         <div class="video-title">
