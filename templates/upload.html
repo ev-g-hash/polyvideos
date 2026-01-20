@@ -1,0 +1,362 @@
+{% extends 'base.html' %}  
+{% load static %}
+
+{% block title %}Загрузка видео{% endblock %}
+
+{% block content %}
+<section class="page">
+  <div class="card stack-lg">
+    <h2>Загрузка видео</h2>
+    <p class="lead">Добавьте новые видео в вашу коллекцию</p>
+
+    <!-- Форма загрузки -->
+    <div class="upload-section active">
+      <form method="POST" enctype="multipart/form-data" class="upload-form" id="uploadForm">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="video">Выберите видео:</label>
+          <input type="file" class="btn" name="video" id="video" accept="video/*" required>
+          <small class="form-hint">Поддерживаются: MP4, MOV, AVI, MKV, WebM. Максимум 500MB на файл.</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="title">Название:</label>
+          <input type="text" name="title" id="title" class="form-input" placeholder="Название видео">
+        </div>
+        
+        <div class="form-group">
+          <label for="description">Описание:</label>
+          <textarea name="description" id="description" class="form-textarea" placeholder="Описание видео"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="duration">Длительность (опционально):</label>
+          <input type="text" name="duration" id="duration" class="form-input" placeholder="Например: 3:45">
+        </div>
+        
+        <button type="submit" class="btn" id="submitBtn">
+          <span class="btn-text">Загрузить</span>
+          <span class="btn-icon">📤</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Секция управления превью для существующих видео -->
+    {% if videos_without_thumbnails %}
+    <div class="thumbnails-section">
+      <h3>🖼️ Видео без превью</h3>
+      <p class="lead">Для этих видео можно создать превью из первого кадра:</p>
+      
+      <div class="videos-without-thumb">
+        {% for video in videos_without_thumbnails %}
+        <div class="video-thumb-item">
+          <div class="video-thumb-info">
+            <span class="video-thumb-title">{% firstof video.title "Видео без названия" %}</span>
+            <span class="video-thumb-format">{{ video.original_format|upper }}</span>
+          </div>
+          <button class="btn generate-thumb-btn" onclick="generateThumbnail({{ video.pk }})">
+            🖼️ Создать превью
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="btn-row">
+      <a class="btn" href="{% url 'conclusion' %}">Содержание</a>
+      <a class="btn secondary" href="{% url 'gallery' %}">В галерею</a>
+    </div>
+  </div>
+</section>
+
+<!-- Модальное окно успешной загрузки -->
+<div id="uploadSuccessModal" class="success-modal{% if show_success_modal %} open{% endif %}">
+  <div class="success-modal-overlay" onclick="closeSuccessModal()"></div>
+  <div class="success-modal-content">
+    <div class="success-modal-icon">✅</div>
+    <h3>Видео загружено!</h3>
+    <p class="success-video-title">"{{ uploaded_video_title }}"</p>
+    <p class="success-message">Видео успешно загружено и готово к просмотру.</p>
+    
+    <div class="success-actions">
+      <a class="btn primary" href="{% url 'gallery' %}">
+        <span class="btn-icon">🎬</span>
+        <span class="btn-text">Перейти в галерею</span>
+      </a>
+      <button class="btn secondary" onclick="closeSuccessModal()">
+        <span class="btn-icon">📤</span>
+        <span class="btn-text">Загрузить ещё</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+.thumbnails-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.thumbnails-section h3 {
+  margin: 0 0 10px 0;
+  color: var(--text-main);
+  font-size: 1.2rem;
+}
+
+.videos-without-thumb {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.video-thumb-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+}
+
+.video-thumb-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.video-thumb-title {
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.video-thumb-format {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.generate-thumb-btn {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+}
+
+.generate-thumb-btn:hover {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+}
+
+@media (max-width: 480px) {
+  .video-thumb-item {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .generate-thumb-btn {
+    width: 100%;
+  }
+}
+
+/* ========================================
+   МОДАЛЬНОЕ ОКНО УСПЕШНОЙ ЗАГРУЗКИ
+   ======================================== */
+
+.success-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 3000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+}
+
+.success-modal.open {
+  display: flex;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.success-modal-overlay {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+
+.success-modal-content {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+  max-width: 420px;
+  width: 100%;
+  padding: 40px 30px;
+  text-align: center;
+  backdrop-filter: blur(20px);
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.success-modal-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  animation: bounce 0.6s ease-out;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.success-modal-content h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.success-video-title {
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--text-main);
+  background: rgba(16, 185, 129, 0.1);
+  padding: 10px 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.success-message {
+  margin: 0 0 25px 0;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.success-actions {
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
+}
+
+.success-actions .btn {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 1rem;
+}
+
+.success-actions .btn.primary {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+}
+
+.success-actions .btn.primary:hover {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4) !important;
+}
+
+.success-actions .btn.secondary {
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  color: var(--text-main) !important;
+}
+
+.success-actions .btn.secondary:hover {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.3) !important;
+}
+
+@media (min-width: 480px) {
+  .success-actions {
+    flex-direction: row;
+  }
+  
+  .success-actions .btn {
+    width: auto;
+    flex: 1;
+  }
+}
+
+/* Индикатор загрузки */
+.loading .btn-text::after {
+  content: '';
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60%, 100% { content: '...'; }
+}
+</style>
+
+<script>
+// Показать модальное окно при успешной загрузке
+{% if show_success_modal %}
+document.addEventListener('DOMContentLoaded', function() {
+  showSuccessModal();
+});
+{% endif %}
+
+function showSuccessModal() {
+  const modal = document.getElementById('uploadSuccessModal');
+  if (modal) {
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeSuccessModal() {
+  const modal = document.getElementById('uploadSuccessModal');
+  if (modal) {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    
+    // Очищаем URL от параметров
+    window.history.replaceState({}, document.title, '/videos/upload/');
+  }
+}
+
+// Закрытие по ESC
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeSuccessModal();
+  }
+});
+
+// Анимация кнопки при загрузке
+document.getElementById('uploadForm')?.addEventListener('submit', function() {
+  const btn = document.getElementById('submitBtn');
+  if (btn) {
+    btn.classList.add('loading');
+    btn.disabled = true;
+  }
+});
+</script>
+{% endblock %}

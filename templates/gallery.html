@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Галерея Видео{% endblock %}
+
+{% block content %}
+<section id="page-gallery" class="page" aria-labelledby="gallery-title">
+  <div class="card stack-lg">
+    <h2 id="gallery-title">Видео коллекция</h2>
+
+    <div class="gallery" id="gallery" data-total-videos="{{ videos_list.count|default:page_obj.paginator.count }}">
+      {% for video in page_obj.object_list %}
+      <div class="video">
+        <div class="video-thumbnail" onclick="openVideoModal('{{ video.video.url }}', '{{ video.title|escapejs }}', '{{ video.description|escapejs }}')">
+          {% if video.thumbnail %}
+          <img src="{{ video.thumbnail.url }}" alt="{{ video.title|default:'Видео' }}" loading="lazy">
+          {% else %}
+          <div class="video-placeholder">
+            <svg fill="currentColor" height="48" viewbox="0 0 24 24" width="48"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+          {% endif %}
+          <div class="play-overlay">
+            <svg fill="currentColor" height="64" viewbox="0 0 24 24" width="64"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+          <div class="video-duration-badge">{{ video.duration }}</div>
+          <div class="hover-play-hint">
+            <svg fill="currentColor" height="20" viewbox="0 0 24 24" width="20"><path d="M8 5v14l11-7z"/></svg>
+            <span>Смотреть</span>
+          </div>
+        </div>
+        {% if video.title %}
+        <div class="video-title">
+          {{ video.title }}
+        </div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <p>Пока нет загруженных видео.</p>
+      {% endfor %}
+    </div>
+
+    <nav class="pagination">
+      {% if page_obj.has_previous %}
+        <a class="btn" href="?page={{ page_obj.previous_page_number }}{% if per_page != 6 %}&per_page={{ per_page }}{% endif %}">Назад</a>
+      {% endif %}
+      <span class="page-info">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a class="btn" href="?page={{ page_obj.next_page_number }}{% if per_page != 6 %}&per_page={{ per_page }}{% endif %}">Далее</a>
+      {% endif %}
+    </nav>
+
+    <div class="btn-row">
+      <a id="to-code" class="btn content-album-btn" href="{% url 'conclusion' %}">Содержание</a>
+      <a id="back-to-greeting" class="btn" href="/">На главную</a>
+    </div>
+  </div>
+</section>
+
+<!-- Модальное окно просмотра видео -->
+<div id="videoModal" class="video-modal" aria-modal="true" role="dialog" aria-label="Просмотр видео">
+  <div class="video-modal-overlay" onclick="closeVideoModal()"></div>
+  <div class="video-modal-content">
+    <div class="video-modal-header">
+      <h3 id="videoModalTitle">Видео</h3>
+      <button class="close-modal-btn" onclick="closeVideoModal()" aria-label="Закрыть">
+        <svg fill="currentColor" height="24" viewbox="0 0 24 24" width="24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+    <div class="video-modal-body">
+      <video id="videoPlayer" controls preload="metadata">
+        <source src="" type="video/mp4">
+        Ваш браузер не поддерживает воспроизведение этого видео.
+        <track kind="captions" src="" srclang="ru" label="Русский">
+      </video>
+    </div>
+    <div class="video-modal-footer">
+      <p id="videoModalDesc"></p>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="gallery-data">
+{
+  "totalVideos": {{ videos_list.count|default:page_obj.paginator.count }},
+  "currentPage": {{ page_obj.number }},
+  "totalPages": {{ page_obj.paginator.num_pages }}
+}
+</script>
+{% endblock %}

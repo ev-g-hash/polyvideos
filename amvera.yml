@@ -1,0 +1,18 @@
+version: null
+meta:
+  environment: python
+  toolchain:
+    name: pip
+    version: "3.12"
+build:
+  requirementsPath: requirements.txt
+  useCache: true
+run:
+  command: |
+    export PATH="/usr/bin:$PATH" &&  
+    python manage.py migrate --noinput &&
+    python manage.py collectstatic --noinput &&
+    gunicorn main.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120
+  persistenceMount: /data
+  containerPort: "8000"
+serviceType: compute
