@@ -118,19 +118,37 @@ class Video(models.Model):
             
             thumbnail_path = os.path.join(thumbnail_dir, f'{self.pk}.jpg')
             
-            # Используем OpenCV - FFmpeg НЕ НУЖЕН!
+            # Используем OpenCV
             cap = cv2.VideoCapture(video_path)
             success, frame = cap.read()
             cap.release()
             
             if success:
+                # Получаем размеры оригинального кадра
+                h, w = frame.shape[:2]
+                original_ratio = w / h  # Соотношение сторон оригинала
+                
+                # Целевой размер превью (16:9)
+                target_ratio = 16 / 9
+                
+                if original_ratio > target_ratio:
+                    # Видео шире 16:9 — обрезаем по бокам
+                    new_width = int(h * target_ratio)
+                    start_x = (w - new_width) // 2
+                    frame = frame[:, start_x:start_x + new_width]
+                elif original_ratio < target_ratio:
+                    # Видео выше 16:9 — обрезаем сверху/снизу
+                    new_height = int(w / target_ratio)
+                    start_y = (h - new_height) // 2
+                    frame = frame[start_y:start_y + new_height, :]
+                
                 # Конвертируем BGR (OpenCV) в RGB (PIL)
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 
                 # Создаём изображение из массива numpy
                 img = Image.fromarray(frame_rgb)
                 
-                # Изменяем размер (опционально)
+                # Изменяем размер до целевого размера
                 img = img.resize((480, 270), Image.Resampling.LANCZOS)
                 
                 # Сохраняем

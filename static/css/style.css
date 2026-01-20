@@ -479,23 +479,25 @@ h2 {
     border-radius: 8px;
     overflow: hidden;
     aspect-ratio: 16/9;
-    background: rgba(255,255,255,0.03);
+    background: #000;
     border: 1px solid var(--border);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.video-thumbnail img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
+.video-thumbnail .thumbnail-img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
     display: block;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Эффект увеличения при наведении */
-.video-thumbnail:hover img {
-    transform: scale(1.15);
+.video-thumbnail:hover .thumbnail-img {
+    transform: scale(1.05);
 }
 
 .video-placeholder {
@@ -734,7 +736,7 @@ h2 {
    ======================================== */
 
 @media (max-width: 768px) {
-    .video-thumbnail:hover img {
+    .video-thumbnail:hover .thumbnail-img {
         transform: scale(1.05);
     }
     
@@ -1284,7 +1286,7 @@ h2 {
         margin: 12px;
     }
     
-    .video-thumbnail img {
+    .video-thumbnail .thumbnail-img {
         height: 120px;
     }
     
@@ -1321,7 +1323,7 @@ h2 {
         margin-right: auto;
     }
     
-    .video-thumbnail img {
+    .video-thumbnail .thumbnail-img {
         height: 100px;
     }
     
@@ -1353,7 +1355,7 @@ h2 {
         text-align: center;
     }
     
-    .video-thumbnail img {
+    .video-thumbnail .thumbnail-img {
         height: 90px;
     }
     
@@ -1398,7 +1400,7 @@ h2 {
 }
 
 @media (max-width: 360px) {
-    .video-thumbnail img {
+    .video-thumbnail .thumbnail-img {
         height: 80px;
     }
     
