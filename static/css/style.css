@@ -1357,9 +1357,11 @@ h2 {
     }
     
     .video-title {
-        display: none !important;
+        display: block;
+        font-size: 0.75rem;  
+        padding: 0 4px;
     }
-    
+
     .conclusion-scrollable {
         max-height: 250px;
     }
