@@ -2,8 +2,7 @@ from django.db import models
 from django.conf import settings
 import os
 import uuid
-import subprocess
-import shutil
+import cv2
 from PIL import Image
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
@@ -13,13 +12,12 @@ def video_upload_path(instance, filename):
     """Генерирует путь для сохранения видео файла"""
     ext = filename.split('.')[-1].lower()
     
-    # Все видео сохраняем как MP4 для совместимости
     if instance.pk:
         filename_base = str(instance.pk)
     else:
         filename_base = f"temp_{uuid.uuid4().hex[:8]}"
     
-    return os.path.join('videos/', f"{filename_base}.mp4")
+    return os.path.join('videos/', f"{filename_base}.{ext}")
 
 
 def thumbnail_upload_path(instance, filename):
@@ -87,7 +85,7 @@ class Video(models.Model):
         return None
     
     def save(self, *args, **kwargs):
-        """Переопределяем сохранение для конвертации и создания превью"""
+        """Переопределяем сохранение для создания превью"""
         is_new = self.pk is None
         
         # Сохраняем оригинальный формат до сохранения
@@ -97,92 +95,16 @@ class Video(models.Model):
         
         super().save(*args, **kwargs)
         
-        # Конвертируем в MP4 если загружен не mp4 и это новое видео
-        if is_new and self.video and self.original_format.lower() not in ['', 'mp4']:
-            self.convert_to_mp4()
-        
         # Создаём превью из видео (после первого сохранения)
         if is_new and self.video:
             self.create_thumbnail()
     
-    def convert_to_mp4(self):
-        """Конвертирует видео в формат MP4 (H.264) для совместимости"""
-        if not self.video:
-            return
-        
-        try:
-            video_path = self.video.path
-            if not os.path.exists(video_path):
-                print(f"Видео файл не найден: {video_path}")
-                return
-            
-            # Проверяем наличие ffmpeg
-            if not shutil.which('ffmpeg'):
-                print("FFmpeg не найден, пропускаем конвертацию")
-                return
-            
-            # Формируем правильный путь для выходного файла
-            ext = self.original_format.lower()
-            input_path = video_path
-            output_path = video_path.replace(f'.{ext}', '.mp4')
-            
-            # Если входной файл уже mp4, пропускаем
-            if ext == 'mp4' and input_path == output_path:
-                print(f"Видео #{self.pk} уже в формате MP4, конвертация не требуется")
-                return
-            
-            # Если файл уже с расширением .mp4 в конце пути, но формат другой,
-            # нужно создать временный файл
-            if ext != 'mp4':
-                temp_path = video_path.replace(f'.{ext}', '_temp.mp4')
-                
-                # Команда для конвертации в MP4 с кодеком H.264
-                cmd = [
-                    'ffmpeg', '-y',
-                    '-i', input_path,
-                    '-c:v', 'libx264',
-                    '-preset', 'fast',
-                    '-crf', '23',
-                    '-c:a', 'aac',
-                    '-b:a', '128k',
-                    '-movflags', '+faststart',
-                    temp_path
-                ]
-                
-                result = subprocess.run(cmd, capture_output=True, text=True)
-                
-                if result.returncode == 0 and os.path.exists(temp_path):
-                    # Удаляем оригинальный файл
-                    if os.path.exists(input_path):
-                        os.remove(input_path)
-                    # Переименовываем temp в правильное имя
-                    os.rename(temp_path, output_path)
-                    
-                    # Обновляем путь к файлу в базе
-                    new_filename = os.path.basename(output_path)
-                    self.video.name = os.path.join('videos/', new_filename)
-                    super().save(update_fields=['video'])
-                    
-                    print(f"Видео #{self.pk} конвертировано в MP4")
-                else:
-                    print(f"Ошибка конвертации: {result.stderr}")
-            else:
-                print(f"Видео #{self.pk} уже MP4, пропускаем конвертацию")
-                
-        except Exception as e:
-            print(f"Ошибка конвертации видео #{self.pk}: {e}")
-    
     def create_thumbnail(self):
-        """Создаёт превью из первого кадра видео"""
+        """Создаёт превью из первого кадра видео (без FFmpeg, используя OpenCV)"""
         if not self.video:
             return
         
         try:
-            # Проверяем наличие ffmpeg
-            if not shutil.which('ffmpeg'):
-                print("FFmpeg не найден, превью не создано")
-                return
-            
             video_path = self.video.path
             
             # Проверяем существует ли файл
@@ -196,40 +118,38 @@ class Video(models.Model):
             
             thumbnail_path = os.path.join(thumbnail_dir, f'{self.pk}.jpg')
             
-            # Извлекаем первый кадр из видео
-            cmd = [
-                'ffmpeg', '-y',
-                '-i', video_path,
-                '-ss', '00:00:01',  # Берем кадр на 1-й секунде
-                '-vframes', '1',
-                '-vf', 'scale=480:-1',  # Ширина 480px, высота автоматически
-                '-q:v', '2',  # Высокое качество JPEG
-                thumbnail_path
-            ]
+            # Используем OpenCV - FFmpeg НЕ НУЖЕН!
+            cap = cv2.VideoCapture(video_path)
+            success, frame = cap.read()
+            cap.release()
             
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            
-            if result.returncode == 0 and os.path.exists(thumbnail_path):
-                # Открываем и оптимизируем изображение
-                img = Image.open(thumbnail_path)
-                img = img.convert('RGB')
+            if success:
+                # Конвертируем BGR (OpenCV) в RGB (PIL)
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                
+                # Создаём изображение из массива numpy
+                img = Image.fromarray(frame_rgb)
+                
+                # Изменяем размер (опционально)
+                img = img.resize((480, 270), Image.Resampling.LANCZOS)
+                
+                # Сохраняем
                 img.save(thumbnail_path, 'JPEG', quality=85)
                 img.close()
                 
-                # Обновляем поле thumbnail
+                # Обновляем поле thumbnail в базе
                 with open(thumbnail_path, 'rb') as f:
                     self.thumbnail.save(f'{self.pk}.jpg', ContentFile(f.read()), save=True)
                 
-                print(f"Превью для видео #{self.pk} создано")
+                print(f"✅ Превью для видео #{self.pk} создано (OpenCV)")
             else:
-                print(f"Ошибка создания превью: {result.stderr}")
+                print(f"❌ Не удалось извлечь кадр из видео #{self.pk}")
                 
         except Exception as e:
-            print(f"Ошибка создания превью для видео #{self.pk}: {e}")
+            print(f"❌ Ошибка создания превью для видео #{self.pk}: {e}")
     
     def generate_thumbnail_on_demand(self):
         """Создаёт превью по запросу (если отсутствует)"""
-        # Проверяем, существует ли файл превью
         thumbnail_exists = False
         if self.thumbnail:
             try:

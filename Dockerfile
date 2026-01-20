@@ -1,10 +1,7 @@
 # Используем официальный Python образ
 FROM python:3.12-slim
 
-# Устанавливаем FFmpeg для конвертации видео и создания превью
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+# ВНИМАНИЕ: FFmpeg НЕ НУЖЕН - используем OpenCV!
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
